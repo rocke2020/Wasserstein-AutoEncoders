@@ -12,6 +12,11 @@ from torchvision.datasets import MNIST
 from torchvision.transforms import transforms
 from torchvision.utils import save_image
 from torch.optim.lr_scheduler import StepLR
+from utils.log_util import logger
+from icecream import ic
+ic.configureOutput(includeContext=True, argToStringFunction=lambda _: str(_))
+ic.lineWrapWidth = 120
+
 
 torch.manual_seed(123)
 
@@ -223,7 +228,9 @@ for epoch in range(args.epochs):
         # ======== Train Generator ======== #
 
         batch_size = images.size()[0]
-
+        # torch.Size([100, 1, 28, 28]
+        # logger.info('%s', images.shape)
+        logger.info('%s', images[0][0])
         z = encoder(images)
         x_recon = decoder(z)
 
@@ -245,7 +252,7 @@ for epoch in range(args.epochs):
 
         enc_optim.step()
         dec_optim.step()
-
+        break
         step += 1
 
         if (step + 1) % 300 == 0:
@@ -268,4 +275,4 @@ for epoch in range(args.epochs):
         save_image(test_data[0].view(-1, 1, 28, 28), './data/reconst_images/wae_mmd_input.png')
         save_image(reconst.data, './data/reconst_images/wae_mmd_images_%d.png' % (epoch + 1))
         save_image(sample.data, './data/reconst_images/wae_mmd_samples_%d.png' % (epoch + 1))
-
+    break
