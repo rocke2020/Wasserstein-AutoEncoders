@@ -11,6 +11,26 @@ from torchvision.datasets import MNIST
 from torchvision.transforms import transforms
 from torchvision.utils import save_image
 from torch.optim.lr_scheduler import StepLR
+import logging, os
+
+
+def get_logger(name=__name__, log_file=None, log_level=logging.INFO):
+    """ default log level DEBUG """
+    logger = logging.getLogger(name)
+    fmt= '%(asctime)s %(filename)s %(lineno)d: %(message)s'
+    datefmt = '%y-%m-%d %H:%M'
+    logging.basicConfig(format=fmt, datefmt=datefmt)
+    if log_file is not None:
+        log_file_folder = os.path.split(log_file)[0]
+        if log_file_folder:
+            os.makedirs(log_file_folder, exist_ok=True)
+        fh = logging.FileHandler(log_file, 'w', encoding='utf-8')
+        fh.setFormatter(logging.Formatter(fmt, datefmt))
+        logger.addHandler(fh)
+    logger.setLevel(log_level)
+    return logger
+
+logger = get_logger(name=__name__, log_file=None, log_level=logging.DEBUG)
 
 torch.manual_seed(123)
 
@@ -218,7 +238,7 @@ for epoch in range(args.epochs):
         step += 1
 
         if (step + 1) % 300 == 0:
-            print("Epoch: [%d/%d], Step: [%d/%d], Reconstruction Loss: %.4f" %
+            logger.info("Epoch: [%d/%d], Step: [%d/%d], Reconstruction Loss: %.4f" %
                   (epoch + 1, args.epochs, step + 1, len(train_loader), recon_loss.data.item()))
 
     if (epoch + 1) % 1 == 0:

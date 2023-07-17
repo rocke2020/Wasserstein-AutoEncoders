@@ -68,7 +68,7 @@ class Encoder(nn.Module):
         self.n_channel = args.n_channel
         self.dim_h = args.dim_h
         self.n_z = args.n_z
-
+        # self.main input shape: batch-size, 1, 28, 28, output shape: batch, self.dim_h * 8, 1, 1
         self.main = nn.Sequential(
             nn.Conv2d(self.n_channel, self.dim_h, 4, 2, 1, bias=False),
             nn.ReLU(True),
@@ -103,7 +103,7 @@ class Decoder(nn.Module):
             nn.Linear(self.n_z, self.dim_h * 8 * 7 * 7),
             nn.ReLU()
         )
-
+        # sigmoid out 0~1
         self.main = nn.Sequential(
             nn.ConvTranspose2d(self.dim_h * 8, self.dim_h * 4, 4),
             nn.BatchNorm2d(self.dim_h * 4),
@@ -125,6 +125,9 @@ class Decoder(nn.Module):
 def imq_kernel(X: torch.Tensor,
                Y: torch.Tensor,
                h_dim: int):
+    """ inverse multiquadratics kernel
+    X, Y shape are the same: batch-size * n_z (8). 
+    """
     batch_size = X.size(0)
 
     norms_x = X.pow(2).sum(1, keepdim=True)  # batch_size x 1
@@ -160,6 +163,7 @@ def imq_kernel(X: torch.Tensor,
 def rbf_kernel(X: torch.Tensor,
                Y: torch.Tensor,
                h_dim: int):
+    """ Radial basis function kernel is only diff with IMQ with the res calucation """
     batch_size = X.size(0)
 
     norms_x = X.pow(2).sum(1, keepdim=True)  # batch_size x 1
@@ -230,7 +234,7 @@ for epoch in range(args.epochs):
         batch_size = images.size()[0]
         # torch.Size([100, 1, 28, 28]
         # logger.info('%s', images.shape)
-        logger.info('%s', images[0][0])
+        # logger.info('%s', images[0][0])， the value is between 0~1
         z = encoder(images)
         x_recon = decoder(z)
 
@@ -238,13 +242,13 @@ for epoch in range(args.epochs):
 
         # ======== MMD Kernel Loss ======== #
 
-        z_fake = Variable(torch.randn(images.size()[0], args.n_z) * args.sigma)
+        z_fake = torch.randn(batch_size, args.n_z) * args.sigma
         if torch.cuda.is_available():
             z_fake = z_fake.cuda()
 
-        z_real = encoder(images)
+        # z_real = encoder(images)
 
-        mmd_loss = imq_kernel(z_real, z_fake, h_dim=encoder.n_z)
+        mmd_loss = imq_kernel(z, z_fake, h_dim=encoder.n_z)
         mmd_loss = mmd_loss / batch_size
 
         total_loss = recon_loss + mmd_loss
@@ -252,11 +256,10 @@ for epoch in range(args.epochs):
 
         enc_optim.step()
         dec_optim.step()
-        break
         step += 1
 
         if (step + 1) % 300 == 0:
-            print("Epoch: [%d/%d], Step: [%d/%d], Reconstruction Loss: %.4f, MMD Loss %.4f" %
+            logger.info("Epoch: [%d/%d], Step: [%d/%d], Reconstruction Loss: %.4f, MMD Loss %.4f" %
                   (epoch + 1, args.epochs, step + 1, len(train_loader), recon_loss.data.item(),
                    mmd_loss.item()))
 
@@ -275,4 +278,4 @@ for epoch in range(args.epochs):
         save_image(test_data[0].view(-1, 1, 28, 28), './data/reconst_images/wae_mmd_input.png')
         save_image(reconst.data, './data/reconst_images/wae_mmd_images_%d.png' % (epoch + 1))
         save_image(sample.data, './data/reconst_images/wae_mmd_samples_%d.png' % (epoch + 1))
-    break
+    # break

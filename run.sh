@@ -1,2 +1,2 @@
 nohup python wae_mmd.py \
-> wae_mmd2.log  2>&1 &
+> wae_mmd.log  2>&1 &
