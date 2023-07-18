@@ -268,7 +268,7 @@ for epoch in range(args.epochs):
         test_iter = iter(test_loader)
         test_data = next(test_iter)
 
-        z_real = encoder(Variable(test_data[0]).cuda())
+        z_real = encoder(test_data[0].cuda())
         reconst = decoder(z_real).cpu().view(batch_size, 1, 28, 28)
         sample = decoder(torch.randn_like(z_real)).cpu().view(batch_size, 1, 28, 28)
 

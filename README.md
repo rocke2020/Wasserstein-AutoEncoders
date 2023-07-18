@@ -1,5 +1,6 @@
 ## Introduction
 This is the implementation of [Wasserstein Auto-Encoders](https://arxiv.org/abs/1711.01558) paper in PyTorch.
+simple and clean WAE  
 
 I rewrite the model in DC-GAN for the encoder/decoder/discriminator instead of simple MLP
 
